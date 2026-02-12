@@ -42,16 +42,57 @@ def relaxation_method(a, b, eps, max_iter=100):
         x_next = x_n + tau * f(x_n)
         delta = abs(x_next - x_n)
         print(f"n = {i}: x = {x_next:.6f}, f(x) = {f(x_next):.6e}, delta = {delta:.6e}")
+
         if delta < eps:
             return x_next
-        return x_n
+
+        x_n = x_next
+
+    return x_n
+
+def chordal_method(a, b, eps):
+    print(f"\n chordal method: a={a}, b={b}, eps={eps}")
+    if f(a) * f_deriv2(a) > 0:
+        c = a
+    else:
+        c = b
+
+    if c == a:
+        x_n = b
+    else:
+        x_n = a
+
+    m = min(abs(f_deriv1(a)), abs(f_deriv1(b)))
+
+    n = 0
+    while True:
+        x_next = x_n - (f(x_n) * (x_n - c)) / (f(x_n) - f(c))
+        delta = (1/m) * abs(f(x_next))
+        n+=1
+        print(f"n = {n}: x = {x_next:.6f}, f(x) = {f(x_next):.6e}, delta = {delta:.6e}")
+
+        if delta < eps: break
+        x_n = x_next
+    return x_next
+
+
 
 
 if __name__ == "__main__":
     visualize_fx()
 
     interval = [0, 1]
+    #interval1 = [3.5, 4.5]
     precision = 0.001
+    #precision1 = 0.00001
 
     relax_method = relaxation_method(interval[0], interval[1], precision)
-    print(f"relaxation method: {relax_method}")
+    print(f"result of the relaxation method: {relax_method:.6e}")
+    #relax_method = relaxation_method(interval[0], interval[1], precision1)
+    #print(f"result of the relaxation method: {relax_method:.6e}")
+
+    chord = chordal_method(interval[0], interval[1], precision)
+    print(f"result of the chordal method: {chord:.6e}")
+    #chord = chordal_method(interval[0], interval[1], precision1)
+    #print(f"result of the chordal method: {chord:.6e}")
+
