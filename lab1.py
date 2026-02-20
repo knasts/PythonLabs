@@ -2,149 +2,89 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-def f(x):
-    return 2 ** x - 4 * x
-
-
-def f_deriv1(x): #first derivative
-    return 2 ** x * math.log(2) - 4
-
-
-def f_deriv2(x):
-    return 2 ** x * (math.log(2) ** 2)
-
 def visualize_fx():
-    x = np.linspace(-0.5, 5, 400)
-    y = 2 ** x - 4 * x
+    x = np.linspace(-1, 2, 200)
+    y = abs(3 * x **2 + 5 * x - 4) + 3
 
-    plt.figure(figsize=(8, 5))
+    plt.figure(figsize=(6, 6))
     plt.plot(x, y, color = 'purple', linewidth = 2)
-    plt.axhline(0, color='blue', linewidth=1, linestyle='--')
-    plt.axvline(0, color='blue', linewidth=1, linestyle='--')
+    plt.axhline(0, color='black', linewidth=1, linestyle='--')
+    plt.axvline(0, color='black', linewidth=1, linestyle='--')
     plt.xlabel('x')
     plt.ylabel('f(x)')
+    plt.axvline(1, color='blue', linewidth=1, linestyle='--')
+
     plt.grid(True, linestyle=':', alpha=0.8)
 
     plt.show()
 
-def relaxation_method(a, b, eps, max_iter=100):
-    print(f"\n relaxation method: a={a}, b={b}, eps={eps}")
-    f_deriv1_a = abs(f_deriv1(a))
-    f_deriv1_b = abs(f_deriv1(b))
-    m1 = min(f_deriv1_a, f_deriv1_b)
-    m2 = max(f_deriv1_a, f_deriv1_b)
+def first_derivative(x):
+    return np.sign(3*x**2 + 5*x - 4) * (6*x + 5)
 
-    tau = 2 / (m2 + m1)
-    x_n = (a+b) / 2
+def second_derivative(x):
+    return 6 * np.sign(3 * x ** 2 + 5 * x - 4)
 
-    for i in range(1, max_iter+1):
-        x_next = x_n + tau * f(x_n)
-        delta = abs(x_next - x_n)
-        print(f"n = {i}: x = {x_next:.6f}, f(x) = {f(x_next):.6e}, delta = {delta:.6e}")
+def function(x):
+    return abs(3 * x ** 2 + 5 * x - 4) + 3
 
-        if delta < eps:
-            return x_next
+def brute_force():
+    min_y = 8.0
+    step = 0.001
+    x = 0
+    best_x = x
+    while x < 1:
+        y = function(x)
+        if y < min_y:
+            min_y = y
+            best_x = x
+        x += step
+    return best_x, min_y
 
-        x_n = x_next
 
-    return x_n
+def davis_swann_campey_function(step = 0.001):
+    x0 = 0.8
 
-def chordal_method(a, b, eps, max_iter=100):
-    print(f"\n chordal method: a={a}, b={b}, eps={eps}")
-    if f(a) * f_deriv2(a) > 0:
-        c = a
-    else:
-        c = b
-
-    if c == a:
-        x_n = b
-    else:
-        x_n = a
-
-    m = min(abs(f_deriv1(a)), abs(f_deriv1(b)))
-
-    n = 0
-    for i in range(1, max_iter+1):
-        x_next = x_n - (f(x_n) * (x_n - c)) / (f(x_n) - f(c))
-        delta = (1/m) * abs(f(x_next))
-        print(f"n = {i}: x = {x_next:.6f}, f(x) = {f(x_next):.6e}, delta = {delta:.6e}")
-
-        if delta < eps: break
-        x_n = x_next
-    return x_next
-
-def visualize_system():
-    x = np.linspace(-4, 4, 400)
-    y = np.linspace(-4, 4, 400)
-    x1, y1 = np.meshgrid(x, y)
-
-    f1 = np.sin(x1 - y1) - x1 * y1 + 1
-    f2 = x1**2 - y1**2 - 0.75
-    plt.figure(figsize=(8, 5))
-    plt.contour(x1, y1, f1, levels = [0], colors='pink', linewidths=2)
-    plt.contour(x1, y1, f2, levels=[0], colors='violet', linewidths=2)
-    plt.xlabel('x')
-    plt.ylabel('f(x)')
-    plt.grid(True, linestyle=':', alpha=0.8)
-    plt.axhline(0, color='blue', linewidth=1, linestyle='--')
-    plt.axvline(0, color='blue', linewidth=1, linestyle='--')
-
-    plt.show()
-
-def newton_method_system(x0, y0, eps = 0.01):
-    print(f"\n solving system")
-    curr_x, curr_y = x0, y0
-
-    n = 0
     while True:
-        f1 = np.sin(curr_x - curr_y) - curr_x * curr_y + 1
-        f2 = curr_x ** 2 - curr_y ** 2 - 0.75
-        func = np.array([f1, f2])
+        x1 = x0 - step
+        x2 = x0 + step
+        y0 = function(x0)
+        y1 = function(x1)
+        y2 = function(x2)
+        if y1 >= y0 and y2 >= y0:
+            return x1, x2
+        elif y1 < y0 and y2 < y0:
+            return -1
+        elif y1 >= y0 and y0 >= y2:
+            while y2 < y0:
+                x1 = x0
+                x0 = x2
+                step *= 2
+                x2 = x0 + step
+                y0 = function(x0)
+                y2 = function(x2)
+            return x1, x2
+        else:
+            while y1 < y0:
+                x2 = x0
+                x0 = x1
+                step *= 2
+                x1 = x0 - step
+                y0 = function(x0)
+                y1 = function(x1)
+            return x1, x2
 
-        w11 = math.cos(curr_x - curr_y) - curr_y
-        w12 = -math.cos(curr_x - curr_y) - curr_x
-        w21 = 2 * curr_x
-        w22 = -2 * curr_y
-        w = np.array([[w11, w12], [w21, w22]])
-
-        try:
-            delta = np.linalg.solve(w, -func)
-        except np.linalg.LinAlgError:
-            print(f"error in newton method")
-            return None
-
-        curr_x = curr_x + delta[0]
-        curr_y = curr_y + delta[1]
-        n += 1
-
-        err = max(abs(delta))
-        print(f"n = {n}, x = {curr_x}, y = {curr_y}, err = {err}")
-
-        if err < eps:
-            break
-
-    return curr_x, curr_y
 
 
-if __name__ == "__main__":
+
+
+
+
+
+if __name__ == '__main__':
     visualize_fx()
-
-    interval = [0, 1]
-    interval_system = [0.8, 0.5]
-    #interval1 = [3.5, 4.5]
-    precision = 0.001
-    #precision1 = 0.00001
-
-    relax_method = relaxation_method(interval[0], interval[1], precision)
-    print(f"result of the relaxation method: {relax_method:.6e}")
-    #relax_method = relaxation_method(interval[0], interval[1], precision1)
-    #print(f"result of the relaxation method: {relax_method:.6e}")
-
-    chord = chordal_method(interval[0], interval[1], precision)
-    print(f"result of the chordal method: {chord:.6e}")
-    #chord = chordal_method(interval[0], interval[1], precision1)
-    #print(f"result of the chordal method: {chord:.6e}")
-    visualize_system()
-    newton_method_system(interval_system[0], interval_system[1])
-
+    print(brute_force())
+    step = 0.001
+    step1 = 0.01
+    step2 = 0.1
+    step3 = 1
+    print(davis_swann_campey_function(step))
