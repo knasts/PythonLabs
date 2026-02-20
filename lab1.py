@@ -73,7 +73,22 @@ def davis_swann_campey_function(step = 0.001):
                 y1 = function(x1)
             return x1, x2
 
-
+def dichotomy_method(a = 0, b = 1):
+    eps = 0.001
+    if abs(a - b) < eps:
+        return (a + b) / 2.0
+    xm = float (a + b) / 2.0
+    x1 = (a + xm) / 2.0
+    x2 = (b + xm) / 2.0
+    ym = function(xm)
+    y1 = function(x1)
+    y2 = function(x2)
+    if ym > y2:
+        return dichotomy_method(xm, b)
+    elif ym > y1:
+        return dichotomy_method(a, xm)
+    elif ym < y1 and ym < y2:
+        return dichotomy_method(x1, x2)
 
 
 
@@ -87,4 +102,5 @@ if __name__ == '__main__':
     step1 = 0.01
     step2 = 0.1
     step3 = 1
+
     print(davis_swann_campey_function(step))
