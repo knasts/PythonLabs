@@ -18,21 +18,14 @@ def visualize_fx():
 
     plt.show()
 
-def first_derivative(x):
-    return np.sign(3*x**2 + 5*x - 4) * (6*x + 5)
-
-def second_derivative(x):
-    return 6 * np.sign(3 * x ** 2 + 5 * x - 4)
-
 def function(x):
     return abs(3 * x ** 2 + 5 * x - 4) + 3
 
-def brute_force():
+def brute_force(a = 0, b = 1, step = 0.001):
     min_y = 8.0
-    step = 0.001
-    x = 0
+    x = a
     best_x = x
-    while x < 1:
+    while x < b:
         y = function(x)
         if y < min_y:
             min_y = y
@@ -43,7 +36,6 @@ def brute_force():
 
 def davis_swann_campey_function(step = 0.001):
     x0 = 0.8
-
     while True:
         x1 = x0 - step
         x2 = x0 + step
@@ -73,8 +65,7 @@ def davis_swann_campey_function(step = 0.001):
                 y1 = function(x1)
             return x1, x2
 
-def dichotomy_method(a = 0, b = 1):
-    eps = 0.001
+def dichotomy_method(a = 0, b = 1, eps = 0.001):
     if abs(a - b) < eps:
         return (a + b) / 2.0
     xm = float (a + b) / 2.0
@@ -91,16 +82,88 @@ def dichotomy_method(a = 0, b = 1):
         return dichotomy_method(x1, x2)
 
 
+def ternary_search(a = 0, b = 1, eps = 0.001):
+    while abs(a - b) > eps:
+        m1 = a + (b - a) / 3.0
+        m2 = b - (b - a) / 3.0
+        f1 = function(m1)
+        f2 = function(m2)
+        if f1 < f2:
+            b = m2
+        else:
+            a = m1
+    best_x = (a + b) / 2.0
+    return best_x, function(best_x)
+
+def golden_ratio(a = 0, b = 1, step = 0.001):
+    ratio = (1 + np.sqrt(5))/2
+    x1 = b - (b - a) / ratio
+    x2 = a + (b - a) / ratio
+    f1 = function(x1)
+    f2 = function(x2)
+    while abs(a - b) > step:
+        if f1 < f2:
+            b = x2
+            x2 = x1
+            f2 = f1
+            x1 = b - (b - a) / ratio
+            f1 = function(x1)
+        else:
+            a = x1
+            x1 = x2
+            f1 = f2
+            x2 = a + (b - a) / ratio
+            f2 = function(x2)
+    best_x = (a + b) / 2.0
+    return best_x, function(best_x)
+
+def fibonacci(k):
+    n = 0
+    n_next = 1
+    for i in range(k):
+        temp = n
+        n = n_next
+        n_next = n_next + temp
+    return n
+
+def fibonacci_method(a = 0, b = 1, step = 0.001):
+    N = 8
+    x1 = a + (fibonacci(N)/fibonacci(N+2)) * (b - a)
+    x2 = a + (fibonacci(N+1)/fibonacci(N+2)) * (b - a)
+    f1 = function(x1)
+    f2 = function(x2)
+    for i in range(1, N):
+        if f1 < f2:
+            b = x2
+            x2 = x1
+            f2 = f1
+            x1 = a + (fibonacci(N - i - 1)/fibonacci(N - i + 1)) * (b - a)
+            f1 = function(x1)
+        else:
+            a = x1
+            x1 = x2
+            f1 = f2
+            x2 = a + (fibonacci(N - i - 1)/fibonacci(N - i + 1)) * (b - a)
+            f2 = function(x2)
+    best_x = (a + b) / 2.0
+    return best_x, function(best_x)
+
+
 
 
 
 
 if __name__ == '__main__':
     visualize_fx()
-    print(brute_force())
+    a = 0
+    b = 1
+    print(brute_force(a, b))
     step = 0.001
     step1 = 0.01
     step2 = 0.1
     step3 = 1
-
     print(davis_swann_campey_function(step))
+    print(dichotomy_method(a, b))
+    print(ternary_search(a, b))
+    print(golden_ratio(a, b))
+    print(fibonacci_method(a, b))
