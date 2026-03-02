@@ -34,22 +34,25 @@ def brute_force(a = 0, b = 1, step = 0.001):
     return best_x, min_y
 
 
-def davis_swann_campey_function(x0 = 0.8, step = 0.001):
+def davis_swann_campey_function(x0, step):
     y0 = function(x0)
     x1 = x0 + step
     y1 = function(x1)
+    k = 2
     if y1 > y0:
         step = -step
         x1 = x0 + step
         y1 = function(x1)
+        k += 1
         if y1 > y0:
-            return x0 + step, x0 - step
+            return sorted([x0 + step, x0 - step]), k
     while True:
         step *= 2
         xn = x1 + step
         yn = function(xn)
+        k += 1
         if yn > y1:
-            return sorted([x0, xn])
+            return sorted([x0, xn]), k
         x0, x1 = x1, xn
         y0, y1 = y1, yn
 
@@ -111,7 +114,7 @@ def fibonacci(k):
         n_next = n_next + temp
     return n
 
-def fibonacci_method(a = 0, b = 1, N = 20):
+def fibonacci_method(a, b, N = 20):
     x1 = a + (fibonacci(N)/fibonacci(N+2)) * (b - a)
     x2 = a + (fibonacci(N+1)/fibonacci(N+2)) * (b - a)
     f1 = function(x1)
@@ -131,6 +134,21 @@ def fibonacci_method(a = 0, b = 1, N = 20):
             f2 = function(x2)
     return (a + b) / 2.0
 
+
+def analyze_dsc_steps():
+    x0 = [0.8 , 0.2 , 1.0]
+    steps = [0.001, 0.01, 0.1 , 1.0]
+    for x in x0:
+        for step in steps:
+            interval, kocf = davis_swann_campey_function(x, step)
+            if interval:
+                res_interval = f"[{interval[0]:.4f}, {interval[1]:.4f}]"
+                print(f"{x:<5}, {step:<5}, {res_interval:<26}, {kocf:<5}")
+            else:
+                print(f"{x:<5}, {step:<5}, {'not found':<26}, {kocf:<5}")
+
+
+
 if __name__ == '__main__':
     visualize_fx()
-    
+    analyze_dsc_steps()
