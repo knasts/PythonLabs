@@ -34,69 +34,55 @@ def brute_force(a = 0, b = 1, step = 0.001):
     return best_x, min_y
 
 
-def davis_swann_campey_function(step = 0.001):
-    x0 = 0.8
-    while True:
-        x1 = x0 - step
-        x2 = x0 + step
-        y0 = function(x0)
+def davis_swann_campey_function(x0 = 0.8, step = 0.001):
+    y0 = function(x0)
+    x1 = x0 + step
+    y1 = function(x1)
+    if y1 > y0:
+        step = -step
+        x1 = x0 + step
         y1 = function(x1)
-        y2 = function(x2)
-        if y1 >= y0 and y2 >= y0:
-            return x1, x2
-        elif y1 < y0 and y2 < y0:
-            return -1
-        elif y1 >= y0 and y0 >= y2:
-            while y2 < y0:
-                x1 = x0
-                x0 = x2
-                step *= 2
-                x2 = x0 + step
-                y0 = function(x0)
-                y2 = function(x2)
-            return x1, x2
-        else:
-            while y1 < y0:
-                x2 = x0
-                x0 = x1
-                step *= 2
-                x1 = x0 - step
-                y0 = function(x0)
-                y1 = function(x1)
-            return x1, x2
+        if y1 > y0:
+            return x0 + step, x0 - step
+    while True:
+        step *= 2
+        xn = x1 + step
+        yn = function(xn)
+        if yn > y1:
+            return sorted([x0, xn])
+        x0, x1 = x1, xn
+        y0, y1 = y1, yn
 
-def dichotomy_method(a = 0, b = 1, eps = 0.001):
+
+def dichotomy_method(a = 0.0, b = 1.0, eps = 0.001):
     if abs(a - b) < eps:
         return (a + b) / 2.0
-    xm = float (a + b) / 2.0
+    xm = (a + b) / 2.0
     x1 = (a + xm) / 2.0
     x2 = (b + xm) / 2.0
     ym = function(xm)
-    y1 = function(x1)
     y2 = function(x2)
+    y1 = function(x1)
     if ym > y2:
-        return dichotomy_method(xm, b)
+        return dichotomy_method(xm, b, eps)
     elif ym > y1:
-        return dichotomy_method(a, xm)
-    elif ym < y1 and ym < y2:
-        return dichotomy_method(x1, x2)
+        return dichotomy_method(a, xm, eps)
+    else:
+        return dichotomy_method(x1, x2, eps)
 
 
 def ternary_search(a = 0, b = 1, eps = 0.001):
     while abs(a - b) > eps:
         m1 = a + (b - a) / 3.0
         m2 = b - (b - a) / 3.0
-        f1 = function(m1)
-        f2 = function(m2)
-        if f1 < f2:
+        if function(m1) < function(m2):
             b = m2
         else:
             a = m1
-    best_x = (a + b) / 2.0
-    return best_x, function(best_x)
+    return (a + b) / 2.0
 
-def golden_ratio(a = 0, b = 1, step = 0.001):
-    ratio = (1 + np.sqrt(5))/2
+def golden_ratio(a, b, step = 0.001):
+    ratio = (1 + math.sqrt(5))/2
     x1 = b - (b - a) / ratio
     x2 = a + (b - a) / ratio
     f1 = function(x1)
@@ -114,8 +100,7 @@ def golden_ratio(a = 0, b = 1, step = 0.001):
             f1 = f2
             x2 = a + (b - a) / ratio
             f2 = function(x2)
-    best_x = (a + b) / 2.0
-    return best_x, function(best_x)
+    return (a + b) / 2.0
 
 def fibonacci(k):
     n = 0
@@ -126,8 +111,7 @@ def fibonacci(k):
         n_next = n_next + temp
     return n
 
-def fibonacci_method(a = 0, b = 1, step = 0.001):
-    N = 8
+def fibonacci_method(a = 0, b = 1, N = 20):
     x1 = a + (fibonacci(N)/fibonacci(N+2)) * (b - a)
     x2 = a + (fibonacci(N+1)/fibonacci(N+2)) * (b - a)
     f1 = function(x1)
@@ -143,27 +127,10 @@ def fibonacci_method(a = 0, b = 1, step = 0.001):
             a = x1
             x1 = x2
             f1 = f2
-            x2 = a + (fibonacci(N - i - 1)/fibonacci(N - i + 1)) * (b - a)
+            x2 = a + (fibonacci(N - i + 2)/fibonacci(N - i + 3)) * (b - a)
             f2 = function(x2)
-    best_x = (a + b) / 2.0
-    return best_x, function(best_x)
-
-
-
-
-
+    return (a + b) / 2.0
 
 if __name__ == '__main__':
     visualize_fx()
-    a = 0
-    b = 1
-    print(brute_force(a, b))
-    step = 0.001
-    step1 = 0.01
-    step2 = 0.1
-    step3 = 1
-    print(davis_swann_campey_function(step))
-    print(dichotomy_method(a, b))
-    print(ternary_search(a, b))
-    print(golden_ratio(a, b))
-    print(fibonacci_method(a, b))
+    
