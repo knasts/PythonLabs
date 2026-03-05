@@ -147,7 +147,7 @@ def fibonacci_method(a, b, N):
             a = x1
             x1 = x2
             f1 = f2
-            x2 = a + (fibonacci(N - i + 2)/fibonacci(N - i + 3)) * (b - a)
+            x2 = a + (fibonacci(N - i )/fibonacci(N - i + 1)) * (b - a)
             f2 = function(x2)
             kocf += 1
     return (a + b) / 2.0, kocf
@@ -218,3 +218,4 @@ if __name__ == '__main__':
     visualize_fx()
     analyze_dsc_steps()
     compare_methods()
+
