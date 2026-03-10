@@ -1,150 +1,221 @@
 import math
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-def f(x):
-    return 2 ** x - 4 * x
-
-
-def f_deriv1(x): #first derivative
-    return 2 ** x * math.log(2) - 4
-
-
-def f_deriv2(x):
-    return 2 ** x * (math.log(2) ** 2)
-
 def visualize_fx():
-    x = np.linspace(-0.5, 5, 400)
-    y = 2 ** x - 4 * x
+    x = np.linspace(-1, 2, 200)
+    y = abs(3 * x **2 + 5 * x - 4) + 3
 
-    plt.figure(figsize=(8, 5))
+    plt.figure(figsize=(6, 6))
     plt.plot(x, y, color = 'purple', linewidth = 2)
-    plt.axhline(0, color='blue', linewidth=1, linestyle='--')
-    plt.axvline(0, color='blue', linewidth=1, linestyle='--')
+    plt.axhline(0, color='black', linewidth=1, linestyle='--')
+    plt.axvline(0, color='black', linewidth=1, linestyle='--')
     plt.xlabel('x')
     plt.ylabel('f(x)')
+    plt.axvline(1, color='blue', linewidth=1, linestyle='--')
+
     plt.grid(True, linestyle=':', alpha=0.8)
 
     plt.show()
 
-def relaxation_method(a, b, eps, max_iter=100):
-    print(f"\n relaxation method: a={a}, b={b}, eps={eps}")
-    f_deriv1_a = abs(f_deriv1(a))
-    f_deriv1_b = abs(f_deriv1(b))
-    m1 = min(f_deriv1_a, f_deriv1_b)
-    m2 = max(f_deriv1_a, f_deriv1_b)
+def function(x):
+    return abs(3 * x ** 2 + 5 * x - 4) + 3
 
-    tau = 2 / (m2 + m1)
-    x_n = (a+b) / 2
+def brute_force(a, b, step):
+    kocf = 0
+    min_y = 8.0
+    x = a
+    best_x = x
+    while x < b:
+        y = function(x)
+        kocf += 1
+        if y < min_y:
+            min_y = y
+            best_x = x
+        x += step
+    return best_x, kocf
 
-    for i in range(1, max_iter+1):
-        x_next = x_n + tau * f(x_n)
-        delta = abs(x_next - x_n)
-        print(f"n = {i}: x = {x_next:.6f}, f(x) = {f(x_next):.6e}, delta = {delta:.6e}")
 
-        if delta < eps:
-            return x_next
-
-        x_n = x_next
-
-    return x_n
-
-def chordal_method(a, b, eps, max_iter=100):
-    print(f"\n chordal method: a={a}, b={b}, eps={eps}")
-    if f(a) * f_deriv2(a) > 0:
-        c = a
-    else:
-        c = b
-
-    if c == a:
-        x_n = b
-    else:
-        x_n = a
-
-    m = min(abs(f_deriv1(a)), abs(f_deriv1(b)))
-
-    n = 0
-    for i in range(1, max_iter+1):
-        x_next = x_n - (f(x_n) * (x_n - c)) / (f(x_n) - f(c))
-        delta = (1/m) * abs(f(x_next))
-        print(f"n = {i}: x = {x_next:.6f}, f(x) = {f(x_next):.6e}, delta = {delta:.6e}")
-
-        if delta < eps: break
-        x_n = x_next
-    return x_next
-
-def visualize_system():
-    x = np.linspace(-4, 4, 400)
-    y = np.linspace(-4, 4, 400)
-    x1, y1 = np.meshgrid(x, y)
-
-    f1 = np.sin(x1 - y1) - x1 * y1 + 1
-    f2 = x1**2 - y1**2 - 0.75
-    plt.figure(figsize=(8, 5))
-    plt.contour(x1, y1, f1, levels = [0], colors='pink', linewidths=2)
-    plt.contour(x1, y1, f2, levels=[0], colors='violet', linewidths=2)
-    plt.xlabel('x')
-    plt.ylabel('f(x)')
-    plt.grid(True, linestyle=':', alpha=0.8)
-    plt.axhline(0, color='blue', linewidth=1, linestyle='--')
-    plt.axvline(0, color='blue', linewidth=1, linestyle='--')
-
-    plt.show()
-
-def newton_method_system(x0, y0, eps = 0.01):
-    print(f"\n solving system")
-    curr_x, curr_y = x0, y0
-
-    n = 0
+def davis_swann_campey_function(x0, step):
+    y0 = function(x0)
+    x1 = x0 + step
+    y1 = function(x1)
+    kocf = 2
+    if y1 > y0:
+        step = -step
+        x1 = x0 + step
+        y1 = function(x1)
+        kocf += 1
+        if y1 > y0:
+            return sorted([x0 + step, x0 - step]), kocf
     while True:
-        f1 = np.sin(curr_x - curr_y) - curr_x * curr_y + 1
-        f2 = curr_x ** 2 - curr_y ** 2 - 0.75
-        func = np.array([f1, f2])
-
-        w11 = math.cos(curr_x - curr_y) - curr_y
-        w12 = -math.cos(curr_x - curr_y) - curr_x
-        w21 = 2 * curr_x
-        w22 = -2 * curr_y
-        w = np.array([[w11, w12], [w21, w22]])
-
-        try:
-            delta = np.linalg.solve(w, -func)
-        except np.linalg.LinAlgError:
-            print(f"error in newton method")
-            return None
-
-        curr_x = curr_x + delta[0]
-        curr_y = curr_y + delta[1]
-        n += 1
-
-        err = max(abs(delta))
-        print(f"n = {n}, x = {curr_x}, y = {curr_y}, err = {err}")
-
-        if err < eps:
-            break
-
-    return curr_x, curr_y
+        step *= 2
+        xn = x1 + step
+        yn = function(xn)
+        kocf += 1
+        if yn > y1:
+            return sorted([x0, xn]), kocf
+        x0, x1 = x1, xn
+        y0, y1 = y1, yn
 
 
-if __name__ == "__main__":
+def dichotomy_method(a, b, eps ):
+    curr_kocf = 0
+    if abs(a - b) < eps:
+        return (a + b) / 2.0, 0
+    xm = (a + b) / 2.0
+    x1 = (a + xm) / 2.0
+    x2 = (b + xm) / 2.0
+    ym = function(xm)
+    y2 = function(x2)
+    y1 = function(x1)
+    curr_kocf += 3
+    if ym > y2:
+        res, kocf = dichotomy_method(xm, b, eps)
+        return res, kocf + curr_kocf
+    elif ym > y1:
+        res, kocf = dichotomy_method(a, xm, eps)
+        return res, kocf + curr_kocf
+    else:
+        res, kocf = dichotomy_method(x1, x2, eps)
+        return res, kocf + curr_kocf
+
+
+def ternary_search(a, b, eps = 0.001):
+    kocf = 0
+    while abs(a - b) > eps:
+        m1 = a + (b - a) / 3.0
+        m2 = b - (b - a) / 3.0
+        if function(m1) < function(m2):
+            b = m2
+        else:
+            a = m1
+        kocf += 2
+    return (a + b) / 2.0, kocf
+
+def golden_ratio(a, b, step = 0.001):
+    kocf = 0
+    ratio = (1 + math.sqrt(5))/2
+    x1 = b - (b - a) / ratio
+    x2 = a + (b - a) / ratio
+    f1 = function(x1)
+    f2 = function(x2)
+    kocf += 2
+    while abs(a - b) > step:
+        if f1 < f2:
+            b = x2
+            x2 = x1
+            f2 = f1
+            x1 = b - (b - a) / ratio
+            f1 = function(x1)
+            kocf += 1
+        else:
+            a = x1
+            x1 = x2
+            f1 = f2
+            x2 = a + (b - a) / ratio
+            f2 = function(x2)
+            kocf += 1
+    return (a + b) / 2.0, kocf
+
+def fibonacci(k):
+    n = 0
+    n_next = 1
+    for i in range(k):
+        temp = n
+        n = n_next
+        n_next = n_next + temp
+    return n
+
+def fibonacci_method(a, b, N):
+    kocf = 0
+    x1 = a + (fibonacci(N)/fibonacci(N+2)) * (b - a)
+    x2 = a + (fibonacci(N+1)/fibonacci(N+2)) * (b - a)
+    f1 = function(x1)
+    f2 = function(x2)
+    kocf += 2
+    for i in range(1, N):
+        if f1 < f2:
+            b = x2
+            x2 = x1
+            f2 = f1
+            x1 = a + (fibonacci(N - i - 1)/fibonacci(N - i + 1)) * (b - a)
+            f1 = function(x1)
+            kocf += 1
+        else:
+            a = x1
+            x1 = x2
+            f1 = f2
+            x2 = a + (fibonacci(N - i )/fibonacci(N - i + 1)) * (b - a)
+            f2 = function(x2)
+            kocf += 1
+    return (a + b) / 2.0, kocf
+
+
+def analyze_dsc_steps():
+    x0 = [0.2 , 0.7 , 0.9]
+    steps = [0.001, 0.01, 0.1 , 1.0]
+    print("dcs analysis:")
+    print(f"{'x0':<5}, {'eps':<5}, {'interval':<18}, {'kocf':<5}")
+    for x in x0:
+        for step in steps:
+            interval, kocf = davis_swann_campey_function(x, step)
+            if interval:
+                res_interval = f"[{interval[0]:.4f}, {interval[1]:.4f}]"
+                print(f"{x:<5}, {step:<5}, {res_interval:<18}, {kocf:<5}")
+            else:
+                print(f"{x:<5}, {step:<5}, {'not found':<18}, {kocf:<5}")
+
+def measure_performance(x1, x2, eps, method):
+    iterations = 10000
+    start = time.perf_counter()
+    res = 0
+    kocf = 0
+    for i in range(iterations):
+        res, kocf = method(x1, x2, eps)
+    end = time.perf_counter()
+    average_time = ((end - start)/iterations) * 1000000
+    return res, kocf, average_time
+
+
+def compare_methods():
+    x1 = 0.0
+    x2 = 1.0
+    x1_dsc = 0.445
+    x2_dsc = 0.637
+    eps = [0.001, 0.01, 0.1 , 1.0]
+    N = [3, 6, 10]
+    methods = [dichotomy_method, ternary_search, golden_ratio, brute_force, fibonacci_method]
+    print(f"\n{'method':<17}, {'result':<8}, {'eps':<5}, {'kocf':<4}, {'time':<8}")
+    for ep in eps:
+        print(f"eps: ", ep)
+        res1, k1, t1 = measure_performance(x1, x2, ep, dichotomy_method)
+        print(f"dichotomy        , {res1:<8.5f}, {ep:<5}, {k1:<4}, {t1:<8.2f}")
+        res2, k2, t2 = measure_performance(x1, x2, ep, ternary_search)
+        print(f"ternary search   , {res2:<8.5f}, {ep:<5}, {k2:<4}, {t2:<8.2f}")
+        res3, k3, t3 = measure_performance(x1, x2, ep, golden_ratio)
+        print(f"golden ratio     , {res3:<8.5f}, {ep:<5}, {k3:<4}, {t3:<8.2f}")
+        res4, k4, t4 = measure_performance(x1, x2, ep, brute_force)
+        print(f"brute force      , {res4:<8.5f}, {ep:<5}, {k4:<4}, {t4:<8.2f}")
+    for n in N:
+        res5, k5, t5 = measure_performance(x1, x2, n, fibonacci_method)
+        print(f"fibonacci method , {res5:<8.5f}, n={n:<3}, {k5:<4}, {t5:<8.2f}")
+    print(f"\n{'using dsc refined interval':<60}")
+    res1, k1, t1 = measure_performance(x1_dsc, x2_dsc, eps[0], dichotomy_method)
+    print(f"dichotomy       , {res1:<8.5f}, {eps[0]:<4}, {k1:<3}, {t1:<8.2f}")
+    res2, k2, t2 = measure_performance(x1_dsc, x2_dsc, eps[0], ternary_search)
+    print(f"ternary search  , {res2:<8.5f}, {eps[0]:<4}, {k2:<3}, {t2:<8.2f}")
+    res3, k3, t3 = measure_performance(x1_dsc, x2_dsc, eps[0], golden_ratio)
+    print(f"golden ratio    , {res3:<8.5f}, {eps[0]:<4}, {k3:<3}, {t3:<8.2f}")
+    res4, k4, t4 = measure_performance(x1_dsc, x2_dsc, eps[0], brute_force)
+    print(f"brute force     , {res4:<8.5f}, {eps[0]:<4}, {k4:<3}, {t4:<8.2f}")
+    res5, k5, t5 = measure_performance(x1_dsc, x2_dsc, N[2], fibonacci_method)
+    print(f"fibonacci method, {res5:<8.5f}, n={N[2]:<3}, {k5:<3}, {t5:<8.2f}")
+
+
+if __name__ == '__main__':
     visualize_fx()
-
-    interval = [0, 1]
-    interval_system = [0.8, 0.5]
-    #interval1 = [3.5, 4.5]
-    precision = 0.001
-    #precision1 = 0.00001
-
-    relax_method = relaxation_method(interval[0], interval[1], precision)
-    print(f"result of the relaxation method: {relax_method:.6e}")
-    #relax_method = relaxation_method(interval[0], interval[1], precision1)
-    #print(f"result of the relaxation method: {relax_method:.6e}")
-
-    chord = chordal_method(interval[0], interval[1], precision)
-    print(f"result of the chordal method: {chord:.6e}")
-    #chord = chordal_method(interval[0], interval[1], precision1)
-    #print(f"result of the chordal method: {chord:.6e}")
-    visualize_system()
-    newton_method_system(interval_system[0], interval_system[1])
+    analyze_dsc_steps()
+    compare_methods()
 
